@@ -20,7 +20,7 @@ public class MyServer {
     public MyServer() {
         System.out.println("Server started.");
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            authenticationService = new AuthServiceImpl();
+            authenticationService = new BaseAuthenticationService();
             authenticationService.start();
             handlerList = new ArrayList<>();
             while (true) {

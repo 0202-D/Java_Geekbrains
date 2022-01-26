@@ -6,14 +6,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author Dm.Petrov
  * DATE: 26.12.2021
  */
+
 public class Client extends JFrame {
     private final String SERVER_ADDRESS = "127.0.0.1";
     private final Integer SERVER_PORT = 8088;
@@ -39,17 +41,19 @@ public class Client extends JFrame {
         Thread thread = new Thread(() -> {
             try {
                 while (true) {
-                        String message = dis.readUTF();
-                        if (message.startsWith("/end")) {
-                            setAuthorized = false;
-                            break;
-                        }
-                        if (message.startsWith("/start")) {
-                            chatArea.append(message + "\n");
-                            break;
-                        }
-                        chatArea.append(message + "\n");
+                    String message = dis.readUTF();
+                    if (message.startsWith("/end")) {
+                        setAuthorized = false;
+                        break;
                     }
+                    if (message.startsWith("/start")) {
+                        loadHistory();
+                        chatArea.append(message + "\n");
+                        break;
+                    }
+                    chatArea.append(message + "\n");
+
+                }
 
                 while (true) {
                     if (!setAuthorized) {
@@ -65,6 +69,7 @@ public class Client extends JFrame {
                         break;
                     }
                     chatArea.append(message + "\n");
+                   saveHistory();
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -76,6 +81,7 @@ public class Client extends JFrame {
         thread.setDaemon(true);
         thread.start();
     }
+
     private void closeConnection() {
         try {
             dis.close();
@@ -89,6 +95,38 @@ public class Client extends JFrame {
         }
         try {
             socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadHistory() throws IOException {
+        int rowCount = 100;
+        File history = new File("MyChatHistory.txt");
+        List<String> historyList = new ArrayList<>();
+        FileInputStream fis = new FileInputStream(history);
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fis));
+        String str;
+        while ((str = bufferedReader.readLine()) != null) {
+            if (!str.startsWith("/end") && (!str.startsWith("/start"))) {
+                historyList.add(str);}
+
+        }
+
+        if (historyList.size() > rowCount) {
+            for (int i = historyList.size() - rowCount; i <= (historyList.size() - 1); i++) {
+                chatArea.append(historyList.get(i) + "\n");
+            }
+        } else {
+            for (int i = 0; i < historyList.size(); i++) {
+                chatArea.append(historyList.get(i) + "\n");
+            }
+        }
+    }
+
+    private void saveHistory() {
+        try (FileWriter writer = new FileWriter("MyChatHistory.txt", false)) {
+            writer.write(chatArea.getText() + "\n");
         } catch (IOException e) {
             e.printStackTrace();
         }

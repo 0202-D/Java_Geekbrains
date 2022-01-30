@@ -4,6 +4,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @author Dm.Petrov
@@ -16,9 +18,10 @@ public class MyServer {
 
     private AuthService authenticationService;
     private List<ClientHandler> handlerList;
-
+    private ExecutorService executorService;
     public MyServer() {
         System.out.println("Server started.");
+        executorService = Executors.newFixedThreadPool(20);
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             authenticationService = new AuthServiceImpl();
             authenticationService.start();
@@ -27,12 +30,14 @@ public class MyServer {
                 System.out.println("Server wait connection...");
                 Socket socket = serverSocket.accept();
                 System.out.println("Client connected.");
-                new ClientHandler(this, socket);
+                executorService.execute(  new ClientHandler(this, socket));
+
             }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             authenticationService.stop();
+            executorService.shutdown();
         }
     }
 

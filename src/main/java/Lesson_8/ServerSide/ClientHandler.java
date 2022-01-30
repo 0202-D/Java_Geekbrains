@@ -11,7 +11,7 @@ import java.net.Socket;
  * DATE: 26.12.2021
  **/
 
-public class ClientHandler {
+public class ClientHandler implements Runnable {
 
     private MyServer myServer;
     private Socket socket;
@@ -21,9 +21,14 @@ public class ClientHandler {
     boolean authorisedClient = false;
 
     public ClientHandler(MyServer myServer, Socket socket) {
+
+        this.myServer = myServer;
+        this.socket = socket;
+    }
+
+    @Override
+    public void run() {
         try {
-            this.myServer = myServer;
-            this.socket = socket;
             this.dis = new DataInputStream(socket.getInputStream());
             this.dos = new DataOutputStream(socket.getOutputStream());
             new Thread(() -> checkTimeOutConnection()).start();
@@ -71,7 +76,8 @@ public class ClientHandler {
             }
         }
     }
-    public void checkTimeOutConnection(){
+
+    public void checkTimeOutConnection() {
         final int timeout = 120 * 1000;
         try {
             Thread.sleep(timeout);
@@ -88,6 +94,7 @@ public class ClientHandler {
             }
         }
     }
+
     public void sendMessage(String message) {
         try {
             dos.writeUTF(message);
@@ -142,5 +149,7 @@ public class ClientHandler {
 
         return nickName;
     }
+
+
 }
 
